@@ -121,7 +121,6 @@ export function login(email, password, navigate) {
             dispatch(setUser({ ...response.data.user, image: userImage }))
 
             Cookies.set('token', response.data.token, { expires: 7 });
-            Cookies.set('storeToken', response.data.storeToken, { expires: 7 });
 
             navigate("/dashboard/my-profile")
         } catch (error) {

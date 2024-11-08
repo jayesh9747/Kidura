@@ -5,7 +5,7 @@ console.log("this is base url", BASE_URL);
 
 // AUTH ENDPOINTS
 export const endpoints = {
-  SENDOTP_API: BASE_URL + "/auth/sendotp",
+  // SENDOTP_API: BASE_URL + "/auth/sendotp",
   SIGNUP_API: BASE_URL + "/auth/signup",
   LOGIN_API: BASE_URL + "/auth/login",
   RESETPASSTOKEN_API: BASE_URL + "/auth/reset-password-token",
@@ -15,8 +15,22 @@ export const endpoints = {
 // PROFILE ENDPOINTS
 export const profileEndpoints = {
   GET_USER_DETAILS_API: BASE_URL + "/profile/details",
-  GET_USER_ENROLLED_COURSES_API: BASE_URL + "/profile/getEnrolledCourses",
-  GET_INSTRUCTOR_DATA_API: BASE_URL + "/profile/instructorDashboard",
+  // GET_USER_ENROLLED_COURSES_API: BASE_URL + "/profile/getEnrolledCourses",
+  // GET_INSTRUCTOR_DATA_API: BASE_URL + "/profile/instructorDashboard",
+}
+
+// PARENT ENDPOINTS
+export const parentEndpoints = {
+  ADD_CHILD_UNDER_ME : BASE_URL + "/parent/add-child",
+  GET_MOBILE_USAGE : BASE_URL +"/parent/mobile-usage",
+  FETCH_CHILDREN_INTEREST_DATA : BASE_URL + "/parent/child/get/interest",
+  INSERT_CHILDREN_INTEREST : BASE_URL + "/parent/child/interest"
+}
+
+// CHILDREN ENDPOINTS 
+export const childrenEndpoints ={
+  JOIN_TO_PARENT : BASE_URL + "/child/join-parent",
+  
 }
 
 // STUDENTS ENDPOINTS

@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from "react";
+import {fetchChildrenInterestData} from "../../../services/oparations/InterestFormAPI"
+import { useDispatch } from "react-redux";
 
 function InterestForm() {
   // State for child selection and form data
+  const dispatch = useDispatch()
   const [selectedChild, setSelectedChild] = useState("Aryan");
   const [formData, setFormData] = useState({
     personalityTraits: "",
@@ -56,10 +59,14 @@ function InterestForm() {
   };
 
   // Handler for saving form data
-  const handleSave = () => {
+  const handleSave =async(e) => {
+    e.preventDefault()
     console.log("Saved Data:", formData);
+    dispatch(fetchChildrenInterestData(formData));
     alert("Form data has been saved successfully!");
   };
+
+  
 
   return (
     <div className="p-5 rounded-lg shadow-lg w-full max-w-3xl mx-auto mt-4">
@@ -109,7 +116,7 @@ function InterestForm() {
         ))}
 
         <button
-          type="button"
+          type="submit"
           onClick={handleSave}
           className="w-full p-3 bg-richblue-600 text-white font-semibold rounded-md hover:bg-richblue-800 transition duration-300"
         >

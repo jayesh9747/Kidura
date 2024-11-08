@@ -84,8 +84,8 @@ exports.GetChildrenMobileUsage = async (req, res) => {
         const mobileUsageData = await MobileUsage.find({
             userId: { $in: childIds }
         })
-            .sort({ updatedAt: -1 }) 
-            .limit(1); 
+            .sort({ updatedAt: -1 })
+            .limit(1);
 
         return res.status(200).json({
             success: true,
@@ -102,13 +102,12 @@ exports.GetChildrenMobileUsage = async (req, res) => {
 };
 
 
-
 exports.UpdateOrCreateInterest = async (req, res) => {
     try {
         const parentId = req.user.id;
         const { childrenId, ...interestData } = req.body;
 
-        
+        console.log("thisisiisis ",);
 
         // Check if the child is associated with the parent
         const child = await User.findOne({ _id: childrenId, parentAccount: parentId, accountType: CONFIG.ACCOUNT_TYPE.CHILD });
@@ -141,7 +140,7 @@ exports.UpdateOrCreateInterest = async (req, res) => {
 
         // Send the response with success
         return res.status(200).json(
-            errorFunction(false, 'Interest data updated successfully', interest)
+            errorFunction(true, 'Interest data updated successfully', interest)
         );
     } catch (error) {
         console.error(error);
@@ -157,13 +156,13 @@ exports.GetInterestDataForChild = async (req, res) => {
         const parentId = req.user.id;
         const { childrenId } = req.query;
 
-        console.log("this is childrenId",parentId);
+        console.log("this is childrenId", parentId);
 
         // Verify that the child is associated with the parent and has accountType 'children'
-        const child = await User.findOne({ _id: childrenId, parentAccount: parentId, accountType: CONFIG.ACCOUNT_TYPE.CHILD});
+        const child = await User.findOne({ _id: childrenId, parentAccount: parentId, accountType: CONFIG.ACCOUNT_TYPE.CHILD });
         if (!child) {
             return res.status(403).json(
-                errorFunction(true, 'Invalid child ID or not associated with parent')
+                errorFunction(false, 'Invalid child ID or not associated with parent')
             );
         }
 
@@ -171,18 +170,18 @@ exports.GetInterestDataForChild = async (req, res) => {
         const interest = await Interest.findOne({ userId: childrenId });
         if (!interest) {
             return res.status(404).json(
-                errorFunction(true, 'Interest data not found for the specified child')
+                errorFunction(false, 'Interest data not found for the specified child')
             );
         }
 
         // Send the response with the interest data
         return res.status(200).json(
-            errorFunction(false, 'Interest data retrieved successfully', interest)
+            errorFunction(true, 'Interest data retrieved successfully', interest)
         );
     } catch (error) {
         console.error(error);
         return res.status(500).json(
-            errorFunction(true, 'An error occurred while retrieving interest data', error.message)
+            errorFunction(false, 'An error occurred while retrieving interest data', error.message)
         );
     }
 };
@@ -231,7 +230,7 @@ exports.GetTodayActivitiesForChild = async (req, res) => {
 
         // Send the response with today's activities and scores
         return res.status(200).json(
-            errorFunction(false, 'Today\'s activities retrieved successfully', activities)
+            errorFunction(true, 'Today\'s activities retrieved successfully', activities)
         );
     } catch (error) {
         console.error(error);
@@ -281,7 +280,7 @@ exports.SetDailyScheduledActivity = async (req, res) => {
 exports.GetScheduledActivities = async (req, res) => {
     try {
         const parentId = req.user.id;
-        const { childrenId} = req.query;
+        const { childrenId } = req.query;
 
         const child = await User.findOne({ _id: childrenId, parentAccount: parentId, accountType: CONFIG.ACCOUNT_TYPE.CHILD });
         if (!child) {

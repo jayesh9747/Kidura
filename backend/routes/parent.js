@@ -4,14 +4,14 @@ const router = express.Router();
 const Joi = require('joi');
 
 
-const { addChildUnderMe, GetChildrenMobileUsage, UpdateOrCreateInterest,GetInterestDataForChild } = require('../controllers/parent');
+const { addChildUnderMe, GetChildrenMobileUsage, UpdateOrCreateInterest, GetInterestDataForChild } = require('../controllers/parent');
 const { isParent } = require('../middleware/auth');
 
 const endpoints = {
     ADD_CHILD: '/add-child',
-    GET_MOBILEPHONE_USAGE: "/mobileusage",
-    INSERT_UPDATE_CHILDREN_INTEREST : "/child/interest",
-    GET_CHILD_INTEREST :"/child/get/interest"
+    GET_MOBILE_USAGE: "/mobile-usage",
+    INSERT_UPDATE_CHILDREN_INTEREST: "/child/interest",
+    GET_CHILD_INTEREST: "/child/get/interest"
 };
 
 const JoinUnderMeSchema = Joi.object({
@@ -49,15 +49,25 @@ const validateJoinUnderMe = (req, res, next) => {
     next();
 };
 
-
+/*
+url : localhost:4000/api/v1/parent/add-child
+ */
 router.post(endpoints.ADD_CHILD, isParent, validateJoinUnderMe, addChildUnderMe);
 
+/*
+url : localhost:4000/api/v1/parent/mobile-usage
+ */
+router.get(endpoints.GET_MOBILE_USAGE, isParent, GetChildrenMobileUsage);
 
-router.get(endpoints.GET_MOBILEPHONE_USAGE, isParent, GetChildrenMobileUsage);
+/*
+url : localhost:4000/api/v1/child/interest
+ */
+router.post(endpoints.INSERT_UPDATE_CHILDREN_INTEREST, isParent, UpdateOrCreateInterest);
 
-router.post(endpoints.INSERT_UPDATE_CHILDREN_INTEREST,isParent,UpdateOrCreateInterest);
-
-router.get(endpoints.GET_CHILD_INTEREST,isParent,GetInterestDataForChild);
+/*
+url : localhost:4000/api/v1/parent/child/get/interest?childrenId=672df6b26045c53f2271c587
+ */
+router.get(endpoints.GET_CHILD_INTEREST, isParent, GetInterestDataForChild);
 
 
 module.exports = router;
