@@ -100,8 +100,10 @@ const signupSchema = Joi.object({
         'any.required': 'Account type is required',
     }),
 }).unknown();
+
 const validateSignUpRequest = (req, res, next) => {
     // Validate the request body against the schema
+    console.log(req.body)
     const { error } = signupSchema.validate(req.body, { abortEarly: false });
 
     // If there's an error, return a 403 response with the error details

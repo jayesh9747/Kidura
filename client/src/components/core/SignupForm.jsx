@@ -3,7 +3,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai"
 import { toast } from "react-hot-toast"
 import { useNavigate } from "react-router-dom"
 import { useDispatch } from "react-redux"
-import { sendOtp } from "../../services/oparations/authAPI"
+import { signUp } from "../../services/oparations/authAPI"
 import { setSignupData } from "../../slices/authSlice"
 import { ACCOUNT_TYPE } from "../../utils/constants"
 
@@ -46,7 +46,18 @@ function SignupForm() {
     }
     dispatch(setSignupData(signupData))
     // Send OTP to user for verification
-    dispatch(sendOtp(formData.email, navigate))
+    dispatch(
+      signUp(
+        "Parent",
+        firstName,
+        lastName,
+        email,
+        password,
+        confirmPassword,
+        contactNumber,
+        navigate
+      )
+    );
     // Handle signup logic here (e.g., dispatch action, API call)
     // Reset form after submission
     setFormData({

@@ -19,13 +19,13 @@ exports.addChildUnderMe = async (req, res) => {
         // Check if the child already exists under the parent
         const existingChild = await User.findOne({
             firstName,
-            lastName,
+            lastName:parent.lastName,
             age,
             parentAccount: parent._id,
             accountType: 'Child'
         });
 
-        console.log("this is eixiting child", existingChild);
+        console.log("this is existing child", existingChild);
 
         if (existingChild) {
             return res.status(409).json(
