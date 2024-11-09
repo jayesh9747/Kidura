@@ -6,7 +6,6 @@ import { apiConnector } from "../apiConnector"
 import { endpoints } from "../api"
 import Cookies from 'js-cookie';
 
-
 const {
     SENDOTP_API,
     SIGNUP_API,
@@ -51,16 +50,24 @@ export function signUp(
     email,
     password,
     confirmPassword,
-    otp,
-    navigate,
     contactNumber,
+    navigate,
     platform = "web",
 ) {
 
-    console.log("this is otp *************************************", otp);
     return async (dispatch) => {
         const toastId = toast.loading("Loading...")
         dispatch(setLoading(true))
+        console.log("Signup input parameters:", {
+            accountType,
+            firstName,
+            lastName,
+            email,
+            password,
+            confirmPassword,
+            contactNumber,
+            platform,
+        });
         try {
             const response = await apiConnector("POST", SIGNUP_API, {
                 accountType,
@@ -69,7 +76,6 @@ export function signUp(
                 email,
                 password,
                 confirmPassword,
-                otp,
                 contactNumber,
                 platform
             })
