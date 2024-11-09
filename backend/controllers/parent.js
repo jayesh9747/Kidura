@@ -6,6 +6,8 @@ const Interest = require('../models/interest');
 const { CONFIG } = require("../constants/config");
 const moment = require("moment");
 const ScheduledActivity = require('../models/ScheduledActivity');
+const Activity = require('../models/activity');
+
 exports.addChildUnderMe = async (req, res) => {
     try {
         const userId = req.user.id; // Parent's ID from the authenticated user
@@ -242,40 +244,66 @@ exports.GetTodayActivitiesForChild = async (req, res) => {
 
 
 
-
 exports.SetDailyScheduledActivity = async (req, res) => {
     try {
-        const { childrenId, activityId, scheduledDate } = req.body;
+        const { childrenId, activityIds, scheduledDate } = req.body;
         const parentId = req.user.id;
 
         // Verify the child belongs to the parent
         const child = await User.findOne({ _id: childrenId, parentAccount: parentId, accountType: CONFIG.ACCOUNT_TYPE.CHILD });
         if (!child) {
             return res.status(403).json(
-                errorFunction(true, 'Invalid child ID or not associated with parent')
+                errorFunction(false, 'Invalid child ID or not associated with parent')
             );
         }
 
-        // Convert scheduledDate to a Date object
-        const scheduleDate = new Date(scheduledDate);
 
-        // Create or update scheduled activity for the specific day
-        const scheduledActivity = await ScheduledActivity.findOneAndUpdate(
-            { userId: childrenId, scheduledDate: scheduleDate, activityId },
-            { userId: childrenId, scheduledDate: scheduleDate, activityId },
-            { upsert: true, new: true, setDefaultsOnInsert: true }
-        );
+        // Ensure scheduledDate is a valid date
+        const scheduleDate = scheduledDate ? new Date(scheduledDate) : new Date();
+        if (isNaN(scheduleDate.getTime())) {
+            return res.status(400).json(
+                errorFunction(false, 'Invalid date format for scheduledDate')
+            );
+        }
+
+        // Format scheduledDate to YYYY-MM-DD format
+        const formattedScheduleDate = scheduleDate.toISOString().split('T')[0];
+
+        // Check if there's already a scheduled activity for the child on this date
+        let scheduledActivity = await ScheduledActivity.findOne({
+            childId: childrenId,
+            scheduledDate: formattedScheduleDate,
+            parentId: parentId
+        });
+
+        if (scheduledActivity) {
+            // Update the existing scheduled activity's activityIds, adding new ones without duplication
+            scheduledActivity.activityIds = Array.from(new Set([...scheduledActivity.activityIds.map(id => id.toString()), ...activityIds]));
+            await scheduledActivity.save();
+        } else {
+            // Create a new scheduled activity if none exists for today
+            scheduledActivity = await ScheduledActivity.create({
+                parentId,
+                childId: childrenId,
+                activityIds,
+                scheduledDate: formattedScheduleDate,
+            });
+        }
+
+        // Populate activityIds for detailed response
+        scheduledActivity = await ScheduledActivity.populate('activityIds');
 
         return res.status(200).json(
-            errorFunction(false, 'Scheduled activity set successfully', scheduledActivity)
+            errorFunction(true, 'Scheduled activity set successfully', scheduledActivity)
         );
     } catch (error) {
         console.error(error);
         return res.status(500).json(
-            errorFunction(true, 'An error occurred while setting scheduled activity', error.message)
+            errorFunction(false, 'An error occurred while setting scheduled activity', error.message)
         );
     }
 };
+
 
 exports.GetScheduledActivities = async (req, res) => {
     try {
@@ -289,17 +317,19 @@ exports.GetScheduledActivities = async (req, res) => {
             );
         }
 
-        // Parse date to filter activities scheduled for this day
-        const scheduledDate = new Date(date);
-        const nextDay = new Date(scheduledDate);
-        nextDay.setDate(scheduledDate.getDate() + 1);
+        const scheduledDate = new Date();
+        const formattedScheduledDate = scheduledDate.toISOString().split('T')[0];
 
+        console.log("get the scedule date", formattedScheduledDate);
 
         // Find the schedule for the given child on a specific date
-        const schedule = await ScheduleActivity.findOne({
-            childrenId: childrenId,
-            scheduledDate,
+        const schedule = await ScheduledActivity.findOne({
+            parentId: parentId,
+            childId: childrenId,
+            scheduledDate: formattedScheduledDate,
         }).populate('activityIds');  // Populating the activity details
+
+        console.log(schedule);
 
         if (!schedule) {
             return res.status(404).json({
@@ -321,5 +351,108 @@ exports.GetScheduledActivities = async (req, res) => {
             message: "An error occurred while fetching scheduled activities",
             error: error.message,
         });
+    }
+};
+
+
+exports.createActivities = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { activities } = req.body;
+
+        if (!Array.isArray(activities) || activities.length === 0) {
+            return res.status(400).json(errorFunction(false, 'Activities array is required and should not be empty'));
+        }
+
+        const results = [];
+
+        // Iterate over each activity data in the array
+        for (const activityData of activities) {
+            const { name, description, benefits, timings, reward, competitiveSpirit, enjoymentLevel, challengeAcceptance, taskCompletion } = activityData;
+
+            // Check if an activity with the same name already exists for the given userId
+            let activity = await Activity.findOne({ userId, name });
+
+            if (activity) {
+                // Update existing activity
+                activity.description = description || activity.description;
+                activity.benefits = benefits || activity.benefits;
+                activity.timings = timings || activity.timings;
+                activity.reward = reward !== undefined ? reward : activity.reward;
+                activity.competitiveSpirit = competitiveSpirit !== undefined ? competitiveSpirit : activity.competitiveSpirit;
+                activity.enjoymentLevel = enjoymentLevel !== undefined ? enjoymentLevel : activity.enjoymentLevel;
+                activity.challengeAcceptance = challengeAcceptance !== undefined ? challengeAcceptance : activity.challengeAcceptance;
+                activity.taskCompletion = taskCompletion !== undefined ? taskCompletion : activity.taskCompletion;
+
+                await activity.save();
+
+                results.push({ success: true, message: `Activity '${name}' updated successfully`, activity });
+            } else {
+                // Create new activity
+                const newActivity = new Activity({
+                    userId,
+                    name,
+                    description,
+                    benefits,
+                    timings,
+                    reward,
+                    competitiveSpirit,
+                    enjoymentLevel,
+                    challengeAcceptance,
+                    taskCompletion
+                });
+
+                await newActivity.save();
+
+                results.push({ success: true, message: `Activity '${name}' created successfully`, activity: newActivity });
+            }
+        }
+
+        return res.status(200).json(errorFunction(true, 'Activities processed successfully', results));
+    } catch (error) {
+        console.error('Error creating/updating activities:', error);
+        return res.status(500).json(errorFunction(false, 'An error occurred while processing activities'));
+    }
+};
+
+exports.updateActivity = async (req, res) => {
+    try {
+        const { activityId } = req.params;
+        const parentId = req.user.id;
+        const updateData = req.body;
+
+        console.log(activityId);
+
+        // Fetch the activity and populate the user (child) details
+        const activity = await Activity.findById(activityId).populate('userId');
+
+        // Check if the activity exists and belongs to the parent's child
+        if (!activity) {
+            return res.status(404).json(
+                errorFunction(false, 'Activity not found')
+            );
+        }
+        console.log("this is activity",activity);
+        if (activity.userId._id.toString() !== parentId) {
+            return res.status(403).json(
+                errorFunction(true, 'Unauthorized to update this activity')
+            );
+        }
+        
+        // Update the activity with the provided data
+        const updatedActivity = await Activity.findByIdAndUpdate(
+            activityId,
+            { $set: updateData },
+            { new: true }
+        );
+
+        return res.status(200).json(
+            errorFunction(true, 'Activity updated successfully', updatedActivity)
+        );
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json(
+            errorFunction(false, 'An error occurred while updating the activity', error.message)
+        );
     }
 };
