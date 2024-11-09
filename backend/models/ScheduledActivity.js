@@ -1,15 +1,10 @@
 const mongoose = require("mongoose");
 const { CONFIG } = require("../constants/config");
 
-const ScheduledActivitySchema = new mongoose.Schema({
-    parentId: {
+const ScheduleActivitySchema = new mongoose.Schema({
+    userId: {
         type: mongoose.Types.ObjectId,
-        ref: 'user',
-        required: true,
-    },
-    childId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'user',
+        ref: 'user', // Reference to the child user
         required: true,
     },
     activityIds: [{
@@ -18,34 +13,20 @@ const ScheduledActivitySchema = new mongoose.Schema({
         required: true,
     }],
     scheduledDate: {
-        type: String, 
+        type: Date,
         required: true,
+        default: Date.now,
     },
 }, { timestamps: true });
 
-module.exports = mongoose.model('ScheduledActivity', ScheduledActivitySchema);
 
-
-
-ScheduledActivitySchema.pre('save', async function (next) {
-    try {
-        const parent = await mongoose.model('user').findById(this.parentId);
-        if (!parent || parent.accountType !== CONFIG.ACCOUNT_TYPE.PARENT) {
-            const error = new Error('Scheduled activities must be associated with a parent account.');
-            return next(error);
-        }
-
-        const child = await mongoose.model('user').findById(this.childId);
-        if (!child || child.accountType !== CONFIG.ACCOUNT_TYPE.CHILD) {
-            const error = new Error('Activities can only be associated with children accounts.');
-            return next(error);
-        }
-
-        next();
-    } catch (error) {
+ScheduleActivitySchema.pre('save', async function (next) {
+    const user = await mongoose.model('user').findById(this.userId);
+    if (!user || user.accountType !== CONFIG.ACCOUNT_TYPE.CHILD) {
+        const error = new Error('Activities can only be associated with children accounts.');
         return next(error);
     }
+    next();
 });
 
-
-module.exports = mongoose.model("ScheduledActivity", ScheduledActivitySchema);
+module.exports = mongoose.model("ScheduledActivity", ScheduleActivitySchema);
