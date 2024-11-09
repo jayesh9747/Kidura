@@ -60,4 +60,13 @@ const ActivitySchema = new mongoose.Schema({
     timestamps: true,
 });
 
+ActivitySchema.pre('save', async function (next) {
+    const user = await mongoose.model('user').findById(this.userId);
+    if (!user || user.accountType !== CONFIG.ACCOUNT_TYPE.CHILD) {
+        const error = new Error('Activities can only be associated with children accounts.');
+        return next(error);
+    }
+    next();
+});
+
 module.exports = mongoose.model("Activity", ActivitySchema);
