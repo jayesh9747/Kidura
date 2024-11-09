@@ -4,14 +4,24 @@ const router = express.Router();
 const Joi = require('joi');
 
 
-const { addChildUnderMe, GetChildrenMobileUsage, UpdateOrCreateInterest, GetInterestDataForChild } = require('../controllers/parent');
+const { addChildUnderMe,
+     GetChildrenMobileUsage, 
+     UpdateOrCreateInterest, 
+     GetInterestDataForChild,
+     SetDailyScheduledActivity,
+     GetScheduledActivities,
+     createActivities,
+     updateActivity} = require('../controllers/parent');
 const { isParent } = require('../middleware/auth');
 
 const endpoints = {
     ADD_CHILD: '/add-child',
     GET_MOBILE_USAGE: "/mobile-usage",
     INSERT_UPDATE_CHILDREN_INTEREST: "/child/interest",
-    GET_CHILD_INTEREST: "/child/get/interest"
+    GET_CHILD_INTEREST: "/child/get/interest",
+    CREATE_ACTIVITY : "/create/activities",
+    SCHEDULE_ACTIVITY :"/schedule/activity",
+    UPDATE_ACTIVITY : "/update/activity/:activityId"
 };
 
 const JoinUnderMeSchema = Joi.object({
@@ -60,7 +70,7 @@ url : localhost:4000/api/v1/parent/mobile-usage
 router.get(endpoints.GET_MOBILE_USAGE, isParent, GetChildrenMobileUsage);
 
 /*
-url : localhost:4000/api/v1/child/interest
+url : localhost:4000/api/v1/parent/child/interest
  */
 router.post(endpoints.INSERT_UPDATE_CHILDREN_INTEREST, isParent, UpdateOrCreateInterest);
 
@@ -69,5 +79,29 @@ url : localhost:4000/api/v1/parent/child/get/interest?childrenId=672df6b26045c53
  */
 router.get(endpoints.GET_CHILD_INTEREST, isParent, GetInterestDataForChild);
 
+/*
+used for the creation of the activities for children - Done
+url : localhost:4000/api/v1/parent/create/activity
+*/
+router.post(endpoints.CREATE_ACTIVITY,isParent,createActivities)
+
+/*
+set the daily scheduled activity - Done
+url : localhost:4000/api/v1/parent/schedule/activity
+*/
+router.post(endpoints.SCHEDULE_ACTIVITY,isParent,SetDailyScheduledActivity)
+
+/*
+show the daily scheduled activity - Done
+url : localhost:4000/api/v1/parent/schedule/activity
+*/
+router.get(endpoints.SCHEDULE_ACTIVITY,isParent,GetScheduledActivities)
+
+
+/*
+give the activity feedback or update the activity
+url : localhost:4000/api/v1/parent/update/activity
+*/
+router.put(endpoints.UPDATE_ACTIVITY,isParent,updateActivity);
 
 module.exports = router;
